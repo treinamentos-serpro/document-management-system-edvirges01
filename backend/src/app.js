@@ -11,16 +11,29 @@
 // usando multer com diskStorage. Não utilize provedores externos.
 
 const express = require('express');
+const documentsRoutes = require('./routes/documentsRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Endpoint de verificação de saúde. As demais rotas (/upload, /documents,
-// /documents/:id/download) serão implementadas durante o Passo 2.
+// Endpoint de verificação de saúde.
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.use(documentsRoutes);
+
+// Middleware de erro genérico: cobre falhas não tratadas pelos controllers (ex.: multer).
+// eslint-disable-next-line no-unused-vars
+app.use((error, req, res, next) => {
+  res.status(500).json({
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: 'Erro inesperado ao processar a requisição.',
+    },
+  });
 });
 
 if (require.main === module) {

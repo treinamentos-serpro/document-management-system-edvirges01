@@ -1,20 +1,56 @@
-// Seed do componente raiz do Document Management System.
-//
-// Este é apenas um ponto de partida mínimo. Durante o Passo 3 você vai usar o
-// Agent Mode do GitHub Copilot para construir os componentes:
-//   - components/UploadComponent
-//   - components/DocumentList
-//   - components/DownloadButton
-// e o serviço services/ que consome a API do backend via fetch.
+import { useCallback, useEffect, useState } from 'react';
+import DocumentList from './components/DocumentList';
+import UploadComponent from './components/UploadComponent';
+import { fetchDocuments } from './services/documentsApi';
+import './App.css';
 
 export default function App() {
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadDocuments = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      setDocuments(await fetchDocuments());
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
+  function handleUploaded(document) {
+    setDocuments((currentDocuments) => [document, ...currentDocuments]);
+  }
+
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
-      <h1>Document Management System</h1>
-      <p>
-        Seed do frontend. Construa a interface durante o Passo 3 usando o Agent
-        Mode do GitHub Copilot.
-      </p>
-    </main>
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="brand"><span className="brand-mark" aria-hidden="true">D</span> DMS</div>
+        <span className="status-chip">Espaço pessoal</span>
+      </header>
+      <main>
+        <section className="hero" aria-labelledby="page-title">
+          <span className="eyebrow">Document Management System</span>
+          <h1 id="page-title">Tudo que importa, em um só lugar.</h1>
+          <p className="hero-copy">Envie seus documentos, acompanhe seu acervo e baixe os arquivos quando precisar.</p>
+        </section>
+        <div className="workspace">
+          <UploadComponent onUploaded={handleUploaded} />
+          <DocumentList
+            documents={documents}
+            isLoading={isLoading}
+            error={error}
+            onRetry={loadDocuments}
+          />
+        </div>
+      </main>
+    </div>
   );
 }
